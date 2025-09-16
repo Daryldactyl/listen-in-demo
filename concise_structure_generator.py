@@ -11,14 +11,12 @@ from datetime import datetime
 from typing import List, Dict, Any
 import os
 from dotenv import load_dotenv
+from dspy_config import safe_configure_dspy, create_chain_of_thought
 
 load_dotenv()
 
-# Configure DSPy
-lm = dspy.LM('openai/google/gemini-2.5-flash', 
-             api_key=os.getenv('OPENROUTER_API_KEY'), 
-             api_base='https://openrouter.ai/api/v1')
-dspy.configure(lm=lm)
+# Configure DSPy safely
+safe_configure_dspy()
 
 class ConciseBrandPostGenerator(dspy.Signature):
     """Generate ultra-concise LinkedIn posts matching actual brand response patterns (3-10 words max)."""
@@ -61,8 +59,8 @@ class ConciseStructureGenerator:
     """Generator focused on ultra-concise posts matching actual brand patterns."""
     
     def __init__(self):
-        self.single_post_generator = dspy.ChainOfThought(ConciseBrandPostGenerator)
-        self.variation_generator = dspy.ChainOfThought(ConcisePostVariationGenerator)
+        self.single_post_generator = create_chain_of_thought(ConciseBrandPostGenerator)
+        self.variation_generator = create_chain_of_thought(ConcisePostVariationGenerator)
     
     def analyze_actual_brand_patterns(self, brand_examples: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Analyze the actual structural patterns from successful brand responses."""

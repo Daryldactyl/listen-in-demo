@@ -71,18 +71,17 @@ class EnhancedContentExtractor:
             self.firecrawl_app = FirecrawlApp(api_key=api_key)
             print("✅ Firecrawl initialized for enhanced content extraction")
         
-        # Initialize DSPy with OpenRouter
-        openrouter_api_key = os.getenv('OPENROUTER_API_KEY')
-        if openrouter_api_key:
-            lm = dspy.LM('openai/openai/gpt-4.1', api_key=openrouter_api_key, api_base='https://openrouter.ai/api/v1')
-            dspy.configure(lm=lm)
-            print("✅ DSPy configured with GPT-4.1")
+        # Initialize DSPy safely
+        from dspy_config import safe_configure_dspy, create_chain_of_thought
+        
+        if safe_configure_dspy():
+            print("✅ DSPy configured successfully")
         else:
-            print("⚠️  OPENROUTER_API_KEY not found - DSPy analysis will be limited")
+            print("⚠️ DSPy configuration failed - analysis will be limited")
         
         # Initialize DSPy analyzers
-        self.visual_analyzer = dspy.ChainOfThought(VisualContentAnalyzer)
-        self.content_analyzer = dspy.ChainOfThought(ContentAnalyzer)
+        self.visual_analyzer = create_chain_of_thought(VisualContentAnalyzer)
+        self.content_analyzer = create_chain_of_thought(ContentAnalyzer)
     
     def extract_content_from_urls(self, urls: List[str], trend_context: str = "") -> List[EnhancedExtractedContent]:
         """Extract content from multiple URLs using Firecrawl and Playwright"""

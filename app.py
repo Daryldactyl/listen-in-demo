@@ -477,19 +477,13 @@ def run_trendjacking_pipeline(trending_urls, user_context, selected_topics, tran
     # Configure DSPy with GPT-4.1 for the entire pipeline
     try:
         from dotenv import load_dotenv
-        import dspy
+        from dspy_config import safe_configure_dspy
         
-        load_dotenv()
-        api_key = os.getenv('OPENROUTER_API_KEY')
-        
-        if api_key:
-            lm = dspy.LM('openai/openai/gpt-4.1', 
-                         api_key=api_key, 
-                         api_base='https://openrouter.ai/api/v1')
-            dspy.configure(lm=lm)
-            # st.info("🤖 Using GPT-4.1 for enhanced generation quality")
+        if safe_configure_dspy():
+            # st.info("🤖 DSPy configured successfully")
+            pass
         else:
-            st.warning("⚠️ OPENROUTER_API_KEY not found - using fallback mode")
+            st.warning("⚠️ DSPy configuration failed - using fallback mode")
     except Exception as e:
         st.warning(f"⚠️ DSPy configuration failed: {e} - using fallback mode")
     

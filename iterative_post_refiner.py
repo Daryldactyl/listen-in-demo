@@ -10,14 +10,12 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+from dspy_config import safe_configure_dspy, create_chain_of_thought
 
 load_dotenv()
 
-# Configure DSPy
-lm = dspy.LM('openai/gpt-4o', 
-             api_key=os.getenv('OPENROUTER_API_KEY'), 
-             api_base='https://openrouter.ai/api/v1')
-dspy.configure(lm=lm)
+# Configure DSPy safely
+safe_configure_dspy()
 
 class PostRefinementAgent(dspy.Signature):
     """Refine a LinkedIn post based on user feedback while maintaining context from the entire generation pipeline."""
@@ -169,7 +167,7 @@ class IterativePostRefiner(dspy.Module):
     """Complete system for iterative post refinement with full pipeline context."""
     
     def __init__(self):
-        self.refiner = dspy.ChainOfThought(PostRefinementAgent)
+        self.refiner = create_chain_of_thought(PostRefinementAgent)
         self.conversation_history = ConversationHistoryBuilder()
     
     def initialize_post_context(self, 

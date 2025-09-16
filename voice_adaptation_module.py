@@ -11,14 +11,12 @@ from typing import List, Dict, Any
 import os
 from dotenv import load_dotenv
 import re
+from dspy_config import safe_configure_dspy, create_chain_of_thought
 
 load_dotenv()
 
-# Configure DSPy
-lm = dspy.LM('openai/google/gemini-2.5-flash', 
-             api_key=os.getenv('OPENROUTER_API_KEY'), 
-             api_base='https://openrouter.ai/api/v1')
-dspy.configure(lm=lm)
+# Configure DSPy safely
+safe_configure_dspy()
 
 class VoiceProfileExtractor(dspy.Signature):
     """Analyze transcript to extract the company's authentic communication patterns and voice characteristics."""
@@ -72,8 +70,8 @@ class VoiceAdaptationPipeline(dspy.Module):
     """Complete pipeline for adapting AI-generated posts to company's authentic voice."""
     
     def __init__(self):
-        self.voice_extractor = dspy.ChainOfThought(VoiceProfileExtractor)
-        self.voice_adapter = dspy.ChainOfThought(ProfessionalVoiceAdapter)
+        self.voice_extractor = create_chain_of_thought(VoiceProfileExtractor)
+        self.voice_adapter = create_chain_of_thought(ProfessionalVoiceAdapter)
     
     def extract_company_voice(self, transcript: str, company_context: str = "") -> Dict[str, Any]:
         """Extract voice characteristics from company transcript."""
@@ -81,6 +79,11 @@ class VoiceAdaptationPipeline(dspy.Module):
         print(f"🎭 === VOICE PROFILE EXTRACTION ===")
         print(f"📄 Transcript length: {len(transcript)} characters")
         print(f"🏢 Company context: {company_context[:100]}...")
+        
+        # Check if DSPy is available
+        if self.voice_extractor is None:
+            print("⚠️ DSPy not available - using fallback voice profile")
+            return self._create_fallback_voice_profile()
         
         # Extract voice profile
         voice_profile = self.voice_extractor(
@@ -298,6 +301,18 @@ class VoiceAdaptationPipeline(dspy.Module):
                     'company_context': company_context
                 }
             }
+    
+    def _create_fallback_voice_profile(self) -> Dict[str, Any]:
+        """Create a generic fallback voice profile when DSPy is not available."""
+        return {
+            'communication_style': 'professional and clear',
+            'personality_traits': ['knowledgeable', 'helpful', 'innovative'],
+            'tone': 'confident yet approachable',
+            'preferred_language_patterns': ['active voice', 'concise statements'],
+            'technical_depth': 'moderate',
+            'industry_focus': 'technology and business',
+            'linkedin_adaptation_score': 0.7
+        }
 
 def display_voice_adaptation_results(results: Dict[str, Any]):
     """Display voice adaptation results in a formatted way."""
